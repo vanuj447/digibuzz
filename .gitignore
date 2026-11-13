@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.env*
+!.env.example
+*.tsbuildinfo
+.DS_Store
+
+# Local previews and caches
+/preview-*.png
+/preview-*.jpg
+.netlify/
+__pycache__/
+*.py[cod]
+*.log

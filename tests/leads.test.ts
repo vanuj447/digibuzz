@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { POST } from '../src/app/api/leads/route';
+import { leadSchema } from '../src/lib/validation';
+const valid={name:'Test Person',business:'Test Business',email:'test@example.com',phone:'+919999999999',service:'Performance marketing',budget:'',message:'We would like to discuss a new campaign.',consent:true,website:'',turnstileToken:''};
+const request=(data:unknown,origin='https://digibuzzmarketing.in')=>new Request('https://digibuzzmarketing.in/api/leads',{method:'POST',headers:{origin,'Content-Type':'application/json'},body:JSON.stringify(data)});
+test('rejects malformed contact data and unlisted services',()=>{assert.equal(leadSchema.safeParse({...valid,email:'nope'}).success,false);assert.equal(leadSchema.safeParse({...valid,service:'invented'}).success,false);assert.equal(leadSchema.safeParse({...valid,consent:false}).success,false);});
+test('rejects cross-origin requests',async()=>assert.equal((await POST(request(valid,'https://untrusted.example'))).status,403));
+test('rejects honeypot submissions',async()=>assert.equal((await POST(request({...valid,website:'spam.example'}))).status,400));
+test('rejects oversized payloads before processing',async()=>assert.equal((await POST(request({...valid,message:'x'.repeat(17000)}))).status,413));
+test('never reports success without a delivery integration',async()=>{delete process.env.RESEND_API_KEY;delete process.env.LEAD_WEBHOOK_URL;delete process.env.TURNSTILE_SECRET_KEY;const res=await POST(request(valid));assert.equal(res.status,503);assert.equal((await res.json()).ok,undefined);});
+test('reports delivery failures honestly',async()=>{const previous=global.fetch;process.env.LEAD_WEBHOOK_URL='https://crm.example/enquiries';global.fetch=async()=>new Response('{}',{status:500});try{assert.equal((await POST(request(valid))).status,502);}finally{global.fetch=previous;delete process.env.LEAD_WEBHOOK_URL;}});
+test('only reports success after delivering sanitized lead data',async()=>{const previous=global.fetch;let payload:Record<string,unknown>={};process.env.LEAD_WEBHOOK_URL='https://crm.example/enquiries';global.fetch=async(_url,init)=>{payload=JSON.parse(String(init?.body));return new Response('{}',{status:200});};try{const res=await POST(request(valid));assert.equal(res.status,200);assert.equal(payload.email,valid.email);assert.equal('turnstileToken' in payload,false);assert.equal('website' in payload,false);}finally{global.fetch=previous;delete process.env.LEAD_WEBHOOK_URL;}});
+test('rejects failed security verification',async()=>{const previous=global.fetch;process.env.TURNSTILE_SECRET_KEY='test-secret';global.fetch=async()=>Response.json({success:false});try{assert.equal((await POST(request(valid))).status,400);}finally{global.fetch=previous;delete process.env.TURNSTILE_SECRET_KEY;}});

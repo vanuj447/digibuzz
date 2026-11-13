@@ -6,7 +6,7 @@ const vertex = `
 attribute float seed;
 attribute vec4 assemblyTarget;
 attribute vec4 logoTarget;
-uniform float logoMix,galaxyTilt;
+uniform float logoMix,galaxyTilt,filament;
 uniform float assembly, assemblyFade, seedSource;
 varying float assembling;
 uniform float time, journey, pixelRatio, mobile, startup, viewAspect, handoff, fusion;
@@ -90,24 +90,30 @@ void main(){
   tint=mix(tint,mix(vec3(.93,.92,.96),vec3(.72,.32,1.),logoTarget.z),brand);
   lightness=mix(lightness,.68,brand);
  }
- assembling=assemblyTarget.w*step(.001,assembly);
+ assembling=assemblyTarget.w*step(.001,assembly)*(1.-filament);
  if(assembling>.5){
   float phase=clamp((assembly-assemblyTarget.z*.12)/.88,0.,1.);
   float t=phase*phase*phase*(phase*(phase*6.-15.)+10.);
-  vec3 origin=mv.xyz;
+  vec3 surface=mv.xyz;
+  vec3 origin=surface;
   if(seedSource>.5)origin=vec3(form(0.,position.xy)*.12)+vec3(0.,0.,-10.);
   vec3 destination=vec3(assemblyTarget.x*8./projectionMatrix[0][0],assemblyTarget.y*8./projectionMatrix[1][1],-8.);
   // A shallow, shared depth arc decelerates into one fixed, camera-aligned destination.
   vec3 control=mix(origin,destination,.5);control.z+=.65;
   mv.xyz=(1.-t)*(1.-t)*origin+2.*(1.-t)*t*control+t*t*destination;
-  tint=vec3(.63,.47,.83);lightness=.85*assemblyFade;
+  // Return continuously to the live surface instead of resetting invisible
+  // particles to full galaxy brightness in a single frame at cancellation.
+  float returning=1.-assemblyFade;
+  mv.xyz=mix(mv.xyz,surface,returning*returning*(3.-2.*returning));
+  tint=mix(vec3(.63,.47,.83),tint,returning);
+  lightness=mix(.85,lightness,returning);
  }
  gl_Position=projectionMatrix*mv;
- gl_PointSize=mix(clamp((1.5+pow(seed,12.)*2.2)*pixelRatio*8./-mv.z,1.,5.*pixelRatio),2.0*pixelRatio,max(assembling,brand));
+ gl_PointSize=mix(clamp((1.5+pow(seed,12.)*2.2)*pixelRatio*8./-mv.z,1.,5.*pixelRatio),2.0*pixelRatio,max(assembling*assemblyFade,brand));
 }`;
-const fragment = `varying vec3 tint;varying float lightness;varying float assembling;uniform float filament,startup,assembly,logoMix;
+const fragment = `varying vec3 tint;varying float lightness;varying float assembling;uniform float filament,startup,assembly,assemblyFade,logoMix;
 void main(){float alpha=1.;if(filament<.5){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;alpha=exp(-d*d*4.5);}
-if(filament>.5&&(assembly>.001||logoMix>.01))discard;
+if(filament>.5){if(logoMix>.01)discard;if(assembly>.001)alpha*=1.-assemblyFade;}
 gl_FragColor=vec4(tint*(1.4+lightness*.9),alpha*lightness*mix(.68,.025*smoothstep(.9,1.,startup),filament));}`;
 
 export default function UniverseScene({journey,fusion,launched,onReady}:{journey:MutableRefObject<number>;fusion:MutableRefObject<number>;launched:MutableRefObject<boolean>;onReady:()=>void}) {
@@ -176,7 +182,7 @@ export default function UniverseScene({journey,fusion,launched,onReady}:{journey
     if(launched.current&&!launchTime)launchTime=now;
     uniforms.handoff.value=launchTime?(reduced.matches?1:T.MathUtils.smootherstep(now-launchTime,0,1400)):0;
     uniforms.fusion.value=fusion.current;uniforms.time.value=elapsed;uniforms.journey.value=journey.current*uniforms.handoff.value;uniforms.startup.value=reduced.matches?1:T.MathUtils.smoothstep(now-first,0,3400);previous=journey.current;
-    if(assemblyStart>=0){const age=now-assemblyStart;uniforms.assembly.value=Math.min(1,age/1450);uniforms.assemblyFade.value=1-T.MathUtils.smoothstep(age,1500,2100);if(age>2150)cancelAssembly();}
+    if(assemblyStart>=0){const age=now-assemblyStart;uniforms.assembly.value=Math.min(1,age/1050);uniforms.assemblyFade.value=1-T.MathUtils.smoothstep(age,1050,1550);if(age>1600)cancelAssembly();}
     uniforms.logoMix.value=T.MathUtils.smootherstep(now-first,1200,3200)*(1-uniforms.handoff.value);
     const tiltTarget=journey.current>=5.999?1:0;
     uniforms.galaxyTilt.value+= (tiltTarget-uniforms.galaxyTilt.value)*(reduced.matches?1:1-Math.exp(-dt/650));

@@ -8,7 +8,7 @@ import ChapterEntrance from './universe/ChapterEntrance';
 import { reels } from '@/data/site';
 import { getJourneyState } from '@/lib/journey';
 import { Arrival, Studio, Capabilities, Process, Work, Clients, Contact } from './universe/StoryChapters';
-const chapters=[['Home','arrival'],['About us','about'],['Services','expertise'],['How we work','process'],['Client work','work'],['Our clients','clients'],['Contact us','contact']];
+const chapters=[['Home','arrival'],['The DigiBuzz difference','about'],['Services','expertise'],['How we work','process'],['Work that speaks','work'],['Our clients','clients'],['Contact us','contact']];
 export default function UniverseHome(){
  const [stage,setStage]=useState(0),[menu,setMenu]=useState(false),[ready,setReady]=useState(false),[opened,setOpened]=useState(false);
  const journey=useRef(0),stageRef=useRef(0),panel=useRef<HTMLDivElement>(null),meter=useRef<HTMLDivElement>(null);
@@ -46,9 +46,8 @@ export default function UniverseHome(){
  useEffect(()=>{const close=(e:KeyboardEvent)=>{if(e.key==='Escape')setMenu(false);};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[]);
  useEffect(()=>{if(!ready)return;const images:HTMLImageElement[]=[];const timer=setTimeout(()=>{reels.forEach(reel=>{if(reel.thumbnail){const image=new window.Image();image.decoding='async';image.src=reel.thumbnail;images.push(image);}});},500);return()=>clearTimeout(timer);},[ready]);
  return <div className={`universe universe-chapter-${stage} ${opened?'experience-open':'experience-loading'}`}><UniverseScene journey={journey} fusion={fusion} launched={launched} onReady={onReady}/><Startup ready={ready} onComplete={onComplete}/><div className="universe-vignette"/><div className="universe-grain" aria-hidden="true"/>
- <header className="universe-nav"><button aria-label="Return to the beginning" onClick={()=>go(0)}><Brand/></button><nav aria-label="Main navigation"><button onClick={()=>go(1)}>About us</button><button onClick={()=>go(2)}>Services</button><button onClick={()=>go(4)}>Client work</button><button onClick={()=>go(6)} className="nav-contact">Contact us <ArrowUpRight size={13}/></button></nav><button className="universe-index" aria-expanded={menu} aria-label={menu?'Close chapter menu':'Open chapter menu'} onClick={()=>setMenu(!menu)}>{menu?<X size={19}/>:<><i/><i/></>}</button></header>
+ <header className="universe-nav"><button aria-label="Return to the beginning" onClick={()=>go(0)}><Brand/></button><nav aria-label="Main navigation"><button onClick={()=>go(1)}>The DigiBuzz difference</button><button onClick={()=>go(2)}>Services</button><button onClick={()=>go(4)}>Work that speaks</button><button onClick={()=>go(6)} className="nav-contact">Contact us <ArrowUpRight size={13}/></button></nav><button className="universe-index" aria-expanded={menu} aria-label={menu?'Close chapter menu':'Open chapter menu'} onClick={()=>setMenu(!menu)}>{menu?<X size={19}/>:<><i/><i/></>}</button></header>
  {menu&&<nav className="universe-menu" aria-label="Journey chapters">{chapters.map(([label],i)=><button key={label} onClick={()=>go(i)}><span>0{i+1}</span>{label}<ArrowUpRight size={17}/></button>)}</nav>}
- <div className="universe-chapter"><span>0{stage+1}</span><i/>{chapters[stage][0]}</div>
  <div className={`scene-viewport scene-${stage}`} ref={panel}>
  <ChapterEntrance stage={stage} panel={panel} opened={opened}/>
  {stage===0?<Arrival enter={()=>go(1)}/>:stage===1?<Studio next={()=>go(2)}/>:stage===2?<Capabilities/>:stage===3?<Process/>:stage===4?<Work/>:stage===5?<Clients/>:<Contact replay={()=>go(0)}/>}

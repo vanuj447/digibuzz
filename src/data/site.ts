@@ -6,12 +6,11 @@ export const site = {
   socials: { instagram: 'https://www.instagram.com/digibuzzmarketing.in/', linkedin: '', youtube: '' },
 };
 export const process = [
-  ['Discover', 'We understand your brand, audience, challenges, and growth opportunities.'],
-  ['Strategize', 'We build a tailored roadmap grounded in creativity and performance.'],
-  ['Create', 'We transform strategy into exceptional campaigns and digital experiences.'],
-  ['Launch', 'We bring ideas to life across the channels that matter.'],
-  ['Optimize', 'We analyze, refine, test, and continuously improve.'],
-  ['Scale', 'We turn successful strategies into sustainable growth.'],
+ ['Discover','Understanding your business, audience and objectives.'],
+ ['Strategise','Building a customised marketing roadmap.'],
+ ['Create','Producing content, campaigns and creative assets.'],
+ ['Amplify','Reaching the right audience through digital platforms.'],
+ ['Optimise','Analysing performance and improving results.'],
 ];
 export type Reel = { title:string; url:string; thumbnail?:string };
 export const reels: Reel[] = [

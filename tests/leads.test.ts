@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { POST } from '../src/app/api/leads/route';
 import { leadSchema } from '../src/lib/validation';
-const valid={name:'Test Person',business:'Test Business',email:'test@example.com',phone:'+919999999999',service:'Performance marketing',budget:'',message:'We would like to discuss a new campaign.',consent:true,website:'',turnstileToken:''};
+const valid={name:'Test Person',business:'Test Business',email:'test@example.com',phone:'+919999999999',service:'Performance Marketing',budget:'',message:'We would like to discuss a new campaign.',consent:true,website:'',turnstileToken:''};
 const request=(data:unknown,origin='https://digibuzzmarketing.in')=>new Request('https://digibuzzmarketing.in/api/leads',{method:'POST',headers:{origin,'Content-Type':'application/json'},body:JSON.stringify(data)});
 test('rejects malformed contact data and unlisted services',()=>{assert.equal(leadSchema.safeParse({...valid,email:'nope'}).success,false);assert.equal(leadSchema.safeParse({...valid,service:'invented'}).success,false);assert.equal(leadSchema.safeParse({...valid,consent:false}).success,false);});
 test('rejects cross-origin requests',async()=>assert.equal((await POST(request(valid,'https://untrusted.example'))).status,403));

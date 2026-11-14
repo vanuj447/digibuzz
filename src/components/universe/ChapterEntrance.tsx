@@ -9,16 +9,16 @@ export default function ChapterEntrance({stage,panel,opened}:{stage:number;panel
   const nodes=Array.from(host.querySelectorAll<HTMLElement>(stage===5?'.scene-heading,.client-orbit-card,.client-orbit-prev,.client-orbit-next,.client-orbit-caption':'[data-emerge],.enquiry-form'));
   // Opacity on the preserve-3d carousel itself flattens it until opacity reaches 1.
   const opacity=new Map(nodes.map(node=>[node,Number(getComputedStyle(node).opacity)]));
-  const animations=nodes.map(node=>node.animate([{opacity:0,offset:0},{opacity:0,offset:.48},{opacity:opacity.get(node)??1,offset:1}],{duration:1600,easing:'linear',fill:'backwards'}));
+  const animations=nodes.map(node=>node.animate([{opacity:0,offset:0},{opacity:0,offset:.48},{opacity:opacity.get(node)??1,offset:1}],{duration:innerWidth<=760?850:1600,easing:'linear',fill:'backwards'}));
   let frame=0,cancelled=false;
   const assemble=()=>{
    if(cancelled)return;
    const width=innerWidth,height=innerHeight,scale=.5;
-   if(stage===5){
+   if(stage===5||innerWidth<=760){
     // Analytic card outlines avoid a screen-sized canvas readback on galaxy entry.
     const targets:number[]=[];
-    host.querySelectorAll<HTMLElement>('.client-orbit-card').forEach(card=>{
-     if(Number(card.style.getPropertyValue('--orbit-opacity'))<.1)return;
+    host.querySelectorAll<HTMLElement>(stage===5?'.client-orbit-card':'h1,h2,.service-sheet,.workflow-film-shell,.work-screen-active,.enquiry-form').forEach(card=>{
+     if(stage===5&&Number(card.style.getPropertyValue('--orbit-opacity'))<.1)return;
      const r=card.getBoundingClientRect(),inset=12;
      for(let x=r.left+inset;x<r.right-inset;x+=5)targets.push(x,r.top,x,r.bottom);
      for(let y=r.top+inset;y<r.bottom-inset;y+=5)targets.push(r.left,y,r.right,y);

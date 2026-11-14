@@ -37,12 +37,26 @@ vec3 form(float state,vec2 uv){
  if(state<4.5)y-=1.25/(r*r);
  vec3 galaxy=vec3(cos(a)*r,y-.8,sin(a)*r*.78);
  float standing=galaxyTilt;
- float tilt=standing*1.16;
+ // Wind the existing disc into a bowed ribbon, lift its centre first,
+ // then unfurl the outer arms. Every particle keeps its original UV identity.
+ float wind=smoothstep(0.,.34,standing)*(1.-smoothstep(.48,1.,standing));
+ float lift=smoothstep(.16,.88,standing);
+ float release=smoothstep(.56,1.,standing);
+ float twist=wind*(.45+v*1.75);
+ galaxy.xz=mat2(cos(twist),-sin(twist),sin(twist),cos(twist))*galaxy.xz;
+ galaxy.xz*=1.-wind*.32;
+ // Opposite arms rise and dip around a continuous central spine.
+ galaxy.y+=wind*sin(a+v*2.4)*r*.48;
+ float radialLift=lift+sin(lift*PI)*(.5-v)*.44;
+ float tilt=radialLift*1.16;
  galaxy.yz=mat2(cos(tilt),-sin(tilt),sin(tilt),cos(tilt))*galaxy.yz;
- galaxy.y*=mix(1.,1.17,standing);
- galaxy.x-=standing*.65;
- galaxy.z-=standing*.6;
- float spin=sin(time*.08)*.1*standing;
+ float bank=sin(standing*PI)*.42;
+ galaxy.xy=mat2(cos(bank),-sin(bank),sin(bank),cos(bank))*galaxy.xy;
+ // The final release settles into the tall, slowly rotating contact galaxy.
+ galaxy.y*=1.+release*.17;
+ galaxy.x-=lift*.65;
+ galaxy.z-=lift*.6;
+ float spin=sin(time*.08)*.1*release;
  galaxy.xy=mat2(cos(spin),-sin(spin),sin(spin),cos(spin))*galaxy.xy;
  return galaxy;
 }
@@ -58,7 +72,7 @@ void main(){
  p.xz=mat2(cos(turn),-sin(turn),sin(turn),cos(turn))*p.xz;
  p*=mix(1.,.6,mobile);
  float entry=smoothstep(.22,.97,journey);
- p+=vec3(mix(viewAspect*1.9,.48,mobile),mix(0.,-1.65,mobile),0.)*(1.-entry)*handoff;
+ p+=vec3(mix(viewAspect*1.9,0.,mobile),mix(0.,-1.65,mobile),0.)*(1.-entry)*handoff;
  // Form a coherent orb first, then compress it to a small seed before the destination opens.
  float cohesion=smoothstep(0.,.65,fusion);
  float compression=mix(1.,.12,smoothstep(.3,1.,fusion));
@@ -125,14 +139,14 @@ export default function UniverseScene({journey,fusion,launched,onReady}:{journey
    if(cancelled)return;
    let renderer:InstanceType<typeof T.WebGLRenderer>;
    try{renderer=new T.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance'});}catch{container.dataset.fallback='true';onReady();return;}
-   const small=innerWidth<760,dpr=Math.min(devicePixelRatio,1.1);
+   const small=innerWidth<760,dpr=Math.min(devicePixelRatio,small?1:1.1);
    renderer.setPixelRatio(dpr);renderer.setSize(innerWidth,innerHeight);renderer.setClearColor(0x000000);container.appendChild(renderer.domElement);
    const scene=new T.Scene(),camera=new T.PerspectiveCamera(48,innerWidth/innerHeight,.1,60);camera.position.set(0,0,10);
-   const composer=new EffectComposer(renderer);composer.setPixelRatio(.9);composer.addPass(new RenderPass(scene,camera));
-   const bloom=new UnrealBloomPass(new T.Vector2(innerWidth,innerHeight),1.15,.7,.3);composer.addPass(bloom);
+   const composer=new EffectComposer(renderer);composer.setPixelRatio(small?.65:.9);composer.addPass(new RenderPass(scene,camera));
+   const bloom=new UnrealBloomPass(new T.Vector2(innerWidth,innerHeight),small?.65:1.15,.7,.3);composer.addPass(bloom);
    const uniforms={logoMix:{value:0},galaxyTilt:{value:0},assembly:{value:0},assemblyFade:{value:1},seedSource:{value:0},time:{value:0},journey:{value:0},pixelRatio:{value:dpr},mobile:{value:small?1:0},viewAspect:{value:innerWidth/innerHeight},startup:{value:0},handoff:{value:0},fusion:{value:0},filament:{value:0}};
    const material=new T.ShaderMaterial({uniforms,vertexShader:vertex,fragmentShader:fragment,transparent:true,depthWrite:false,blending:T.AdditiveBlending});
-   const cols=small?104:176,rows=small?104:176,count=cols*rows;
+   const cols=small?76:176,rows=small?76:176,count=cols*rows;
    const positions=new Float32Array(count*3),seeds=new Float32Array(count);
    for(let x=0;x<cols;x++)for(let y=0;y<rows;y++){const i=x*rows+y;positions[i*3]=x/cols;positions[i*3+1]=y/(rows-1);seeds[i]=(i*.61803398875)%1;}
    const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.BufferAttribute(positions,3));geometry.setAttribute('seed',new T.BufferAttribute(seeds,1));
@@ -156,14 +170,14 @@ export default function UniverseScene({journey,fusion,launched,onReady}:{journey
    const lineGeometry=geometry.clone();lineGeometry.setAttribute('assemblyTarget',targetAttribute);lineGeometry.setAttribute('logoTarget',logoAttribute);lineGeometry.setIndex(indices);
    const lineMaterial=new T.ShaderMaterial({uniforms:{...uniforms,filament:{value:1}},vertexShader:vertex,fragmentShader:fragment,transparent:true,depthWrite:false,blending:T.AdditiveBlending});
    const threads=new T.LineSegments(lineGeometry,lineMaterial);threads.frustumCulled=false;scene.add(threads);
-   const starCount=small?650:1900,stars=new Float32Array(starCount*3),sizes=new Float32Array(starCount);
+   const starCount=small?420:1900,stars=new Float32Array(starCount*3),sizes=new Float32Array(starCount);
    for(let i=0;i<starCount;i++){stars[i*3]=((i*.618034)%1-.5)*35;stars[i*3+1]=((i*.414214)%1-.5)*23;stars[i*3+2]=-3-(i*.754877%1)*15;sizes[i]=i*.56984%1;}
    const starGeometry=new T.BufferGeometry();starGeometry.setAttribute('position',new T.BufferAttribute(stars,3));starGeometry.setAttribute('seed',new T.BufferAttribute(sizes,1));
    const starMaterial=new T.ShaderMaterial({uniforms:{time:uniforms.time,pixelRatio:uniforms.pixelRatio},transparent:true,depthWrite:false,blending:T.AdditiveBlending,vertexShader:`attribute float seed;uniform float time,pixelRatio;varying float strength;void main(){vec3 p=position;p.x+=sin(time*.035+seed*13.)*.35;p.y+=cos(time*.025+seed*9.)*.2;vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;strength=(.3+seed*.6)*(.75+.25*sin(time*.65+seed*30.));gl_PointSize=(.8+pow(seed,12.)*4.5)*pixelRatio;}`,fragmentShader:`varying float strength;void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;gl_FragColor=vec4(.38,.5,1.,exp(-d*d*5.)*strength);}`});scene.add(new T.Points(starGeometry,starMaterial));
    let assemblyStart=-1;
    const assemble=(event:Event)=>{
     const {targets,width,height}=(event as CustomEvent<{targets:number[];width:number;height:number}>).detail;
-    targetData.fill(0);const total=targets.length/2,used=Math.min(total,small?6500:15000);
+    targetData.fill(0);const total=targets.length/2,used=Math.min(total,small?2400:15000);
     for(let n=0;n<used;n++){
      const i=(n*7919)%count,index=Math.floor(n*total/used)*2;
      targetData[i*4]=targets[index]/width*2-1;targetData[i*4+1]=1-targets[index+1]/height*2;
@@ -174,7 +188,7 @@ export default function UniverseScene({journey,fusion,launched,onReady}:{journey
    const cancelAssembly=()=>{assemblyStart=-1;uniforms.assembly.value=0;};
    window.addEventListener('digibuzz-assembly',assemble);window.addEventListener('digibuzz-assembly-cancel',cancelAssembly);
    const core=new T.Vector3();
-   const reduced=matchMedia('(prefers-reduced-motion: reduce)');let raf=0,last=0,elapsed=0,first=0,previous=-1,frames=0,cost=0,adapted=false,notified=false,launchTime=0;
+   const reduced=matchMedia('(prefers-reduced-motion: reduce)');let raf=0,last=0,elapsed=0,first=0,previous=-1,frames=0,cost=0,adapted=false,notified=false,launchTime=0,tiltProgress=0;
    const draw=(now:number)=>{raf=requestAnimationFrame(draw);if(document.hidden)return;if(!first)first=now;
     if(now-last<13)return;const dt=Math.min(now-last,50);last=now;
     if(reduced.matches&&Math.abs(previous-journey.current)<.001&&uniforms.startup.value===1&&uniforms.handoff.value===1)return;
@@ -185,7 +199,10 @@ export default function UniverseScene({journey,fusion,launched,onReady}:{journey
     if(assemblyStart>=0){const age=now-assemblyStart;uniforms.assembly.value=Math.min(1,age/1050);uniforms.assemblyFade.value=1-T.MathUtils.smoothstep(age,1050,1550);if(age>1600)cancelAssembly();}
     uniforms.logoMix.value=T.MathUtils.smootherstep(now-first,1200,3200)*(1-uniforms.handoff.value);
     const tiltTarget=journey.current>=5.999?1:0;
-    uniforms.galaxyTilt.value+= (tiltTarget-uniforms.galaxyTilt.value)*(reduced.matches?1:1-Math.exp(-dt/650));
+    // A bounded timeline gives the winding and release equal time, without
+    // an exponential snap at the beginning or a long settling tail.
+    tiltProgress=reduced.matches?tiltTarget:T.MathUtils.clamp(tiltProgress+(tiltTarget?1:-1)*dt/2300,0,1);
+    uniforms.galaxyTilt.value=T.MathUtils.smootherstep(tiltProgress,0,1);
     const progress=uniforms.journey.value;
     const entry=T.MathUtils.smoothstep(progress,.22,.97),release=T.MathUtils.smoothstep(progress,1.32,1.99);
     camera.position.z=T.MathUtils.lerp(10-9.6*entry*(1-release),10,fusion.current);
@@ -193,7 +210,7 @@ export default function UniverseScene({journey,fusion,launched,onReady}:{journey
     camera.fov=48+entry*(1-release)*12;
     camera.updateProjectionMatrix();camera.updateMatrixWorld();
     const chapter=Math.floor(progress+.001);
-    core.set(chapter===0?(small?.48:innerWidth/innerHeight*1.9)*(1-entry)*uniforms.handoff.value:0,chapter===0&&small?-1.65*(1-entry)*uniforms.handoff.value:chapter===3||chapter===4?-2.05:chapter===6?-.8:0,0).multiplyScalar(1-fusion.current).project(camera);
+    core.set(chapter===0?(small?0:innerWidth/innerHeight*1.9)*(1-entry)*uniforms.handoff.value:0,chapter===0&&small?-1.65*(1-entry)*uniforms.handoff.value:chapter===3||chapter===4?-2.05:chapter===6?-.8:0,0).multiplyScalar(1-fusion.current).project(camera);
     const parent=container.parentElement;
     if(parent){parent.style.setProperty('--core-x',`${Math.max(0,Math.min(innerWidth,(core.x*.5+.5)*innerWidth))}px`);parent.style.setProperty('--core-y',`${Math.max(0,Math.min(innerHeight,(-core.y*.5+.5)*innerHeight))}px`);}
     const started=performance.now();composer.render();cost+=Math.max(performance.now()-started,dt);frames++;

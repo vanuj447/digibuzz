@@ -1,6 +1,6 @@
 export const site = {
   name: 'DigiBuzz Marketing', url: 'https://digibuzzmarketing.in',
-  description: 'Creative thinking. Intelligent performance. Digital experiences that turn attention into impact.',
+  description: 'DigiBuzz Marketing offers social media management, Meta and Google Ads, content production, branding and AI & CGI campaigns for brands in Karnal, Chandigarh and Delhi NCR.',
   // Populate only with approved business details. Empty values never become dead links.
   logo: '', email: 'Digibuzz.marketing.info@gmail.com', phone: '+919729000829', whatsapp: '+919729000829', address: 'NCR | Karnal | Chandigarh', bookingUrl: '',
   socials: { instagram: 'https://www.instagram.com/digibuzzmarketing.in/', linkedin: '', youtube: '' },

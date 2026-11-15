@@ -1,8 +1,10 @@
 'use client';
 import Image from 'next/image';
+import { flushSync } from 'react-dom';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowUpRight, ArrowRight, ArrowLeft, Phone, MessageCircle, Instagram, Play, Target, Orbit, Camera, Globe, PenTool, Radio, Sparkles, Compass, Layers } from 'lucide-react';
 import EnquiryForm from './EnquiryForm';
+import ExpandingReel from './ExpandingReel';
 import { useSwipe } from '@/lib/useSwipe';
 import Link from 'next/link';
 import { services } from '@/data/services';
@@ -32,6 +34,7 @@ export function Capabilities({standalone=false}:{standalone?:boolean}){
 }
 const workflowCopy=workflow.map(step=>step[1]);
 export function Process(){
+ const film=useRef<HTMLDivElement>(null);
  const beam=useRef<SVGCircleElement>(null),trail=useRef<SVGPathElement>(null);
  const [playing,setPlaying]=useState(false),[current,setCurrent]=useState(0),[reduced,setReduced]=useState(false);
  useEffect(()=>{const preference=matchMedia('(prefers-reduced-motion: reduce)');const sync=()=>setReduced(preference.matches);sync();preference.addEventListener('change',sync);return()=>preference.removeEventListener('change',sync)},[]);
@@ -50,13 +53,20 @@ export function Process(){
    trail.current?.setAttribute('stroke-dashoffset',String(100-position*100/(workflow.length-1)));
   };raf=requestAnimationFrame(animate);return()=>cancelAnimationFrame(raf);
  },[reduced]);
+ useEffect(()=>{const mobile=matchMedia('(max-width:760px)');const stop=()=>{if(mobile.matches)setPlaying(false);};mobile.addEventListener('change',stop);return()=>mobile.removeEventListener('change',stop);},[]);
+
  const StepIcon=[Compass,Target,Camera,Radio,Orbit,Sparkles][current];
  return <section className="story-frame workflow-cinema">
  <header className="workflow-heading" data-emerge><div><span className="scene-label">HOW WE WORK</span><h2>Good work.<em> Built together.</em></h2></div><p>A clear plan. A hands-on team.<br/>From your first brief to your next campaign.</p></header>
  <div className="workflow-composition">
- <div className="workflow-film" data-emerge><div className="workflow-film-shell">
- <div className="workflow-film-image">{playing?<iframe title="DigiBuzz behind the scenes" src="https://www.instagram.com/reel/DebA_yyAonB/embed/" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen/>:<button aria-label="Play our behind the scenes reel" onClick={()=>setPlaying(true)}><Image src="/images/reels/DebA_yyAonB.jpg" alt="DigiBuzz team working on a client shoot" fill unoptimized sizes="(max-width:760px) 240px, 320px"/><span className="workflow-watch"><Play size={18}/> Watch our team</span></button>}</div>
- <a href="https://www.instagram.com/reel/DebA_yyAonB/" target="_blank" rel="noreferrer"><Instagram size={17}/><span>BEHIND THE SCENES</span><ArrowUpRight size={18}/></a></div><span className="workflow-film-note">REAL PEOPLE. REAL CREATIVE WORK.</span></div>
+ <div className="workflow-film" data-emerge><div className="workflow-film-shell" ref={film}>
+ <div className="workflow-film-image">
+ <a className="workflow-mobile-poster" href="https://www.instagram.com/reel/DebA_yyAonB/" target="_blank" rel="noreferrer" aria-label="Watch our behind the scenes reel on Instagram"><Image src="/images/reels/DebA_yyAonB.jpg" alt="DigiBuzz team working on a client shoot" fill unoptimized sizes="(max-width:760px) 180px, 320px"/><span className="workflow-watch"><Instagram size={16}/> Watch on Instagram</span></a>
+ <div className="workflow-desktop-player"><button aria-label="Play our behind the scenes reel" onClick={()=>flushSync(()=>setPlaying(true))}><Image src="/images/reels/DebA_yyAonB.jpg" alt="DigiBuzz team working on a client shoot" fill unoptimized sizes="320px"/><span className="workflow-watch"><Play size={18}/> Watch our team</span></button></div>
+ </div>
+ <a href="https://www.instagram.com/reel/DebA_yyAonB/" target="_blank" rel="noreferrer"><Instagram size={17}/><span>OPEN IN INSTAGRAM</span><ArrowUpRight size={18}/></a>
+ {playing&&<ExpandingReel origin={film} onClose={()=>setPlaying(false)}/>}
+ </div><span className="workflow-film-note">REAL PEOPLE. REAL CREATIVE WORK.</span></div>
  <div className="workflow-story">
  <div className="workflow-active" key={current}><div className="workflow-active-top"><span>OUR PROCESS / {number(current)}</span><StepIcon size={25}/></div><span className="workflow-watermark" aria-hidden="true">{number(current)}</span><h3>{workflow[current][0]}<em>.</em></h3><p>{workflowCopy[current]}</p></div>
  <div className="workflow-staircase" data-emerge><svg className="workflow-graph" viewBox="0 0 600 240" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="workflowArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#bc8fe9" stopOpacity=".24"/><stop offset="100%" stopColor="#bc8fe9" stopOpacity="0"/></linearGradient></defs><path className="workflow-graph-area" d="M50 170 L150 148 L250 126 L350 104 L450 82 L550 60 L550 225 L50 225Z"/>{[0,1,2,3,4].map(i=><path className="workflow-grid" key={i} d={`M25 ${225-i*32} H575`}/>)}{workflow.map((_,i)=><path className="workflow-grid" key={i} d={`M${50+i*500/(workflow.length-1)} 225 V${170-i*110/(workflow.length-1)}`}/>)}<path className="workflow-graph-depth" d="M50 178 L150 156 L250 134 L350 112 L450 90 L550 68"/><path className="workflow-graph-line" d="M50 170 L150 148 L250 126 L350 104 L450 82 L550 60"/><path ref={trail} className="workflow-live-beam" pathLength="100" strokeDasharray="100" strokeDashoffset="100" d="M50 170 L150 148 L250 126 L350 104 L450 82 L550 60"/>{workflow.map((_,i)=><circle key={i} cx={50+i*500/(workflow.length-1)} cy={170-i*110/(workflow.length-1)} r="5" className={current>=i?'graph-dot passed':'graph-dot'}/>)}<circle ref={beam} className="graph-traveller" cx="50" cy="170" r="6"/></svg>{workflow.map(([name],i)=>{const Icon=[Compass,Target,Camera,Radio,Orbit,Sparkles][i];return <div key={name} aria-current={current===i?'step':undefined} aria-label={`Step ${i+1}: ${name}`} className={`workflow-step ${current===i?'is-current':''} ${current>i?'is-done':''}`} style={vars({'--step':i})}><span className="workflow-step-glass"><span>{number(i)}</span><Icon size={24}/><i/></span><b>{name}</b></div>})}</div>

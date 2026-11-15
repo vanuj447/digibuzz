@@ -250,3 +250,41 @@ html:has(.universe){scroll-padding-top:0}body:has(.universe)>.reading-progress{d
 
 .universe-nav nav>a{font-size:11px;color:#bdb8cc;transition:color .2s}.universe-nav nav>a:hover{color:white}
 .universe-menu>a{display:flex;align-items:center;gap:16px;width:100%;padding:17px 0;border-bottom:1px solid #bda7e819;font-size:14px;text-align:left}.universe-menu>a span{font-size:8px;color:#a18bbf}.universe-menu>a svg{margin-left:auto}
+.workflow-mobile-poster{display:none}.workflow-desktop-player{position:absolute;inset:0}.workflow-film-image img{object-fit:contain}
+.workflow-close-player{display:flex;align-items:center;justify-content:center;gap:7px;padding:8px 12px;margin-top:6px;border-radius:7px;border:1px solid #c6a1df66;background:#20132e;color:#ead9f7;font-size:11px;flex-shrink:0}
+@media(min-width:761px){
+ .workflow-composition{transition:grid-template-columns .5s cubic-bezier(.2,.7,.2,1),gap .5s}
+ .workflow-playing .workflow-composition{grid-template-columns:minmax(340px,1.1fr) minmax(0,1fr);gap:4%}
+ .workflow-playing .workflow-film{width:100%;max-width:420px;height:100%;aspect-ratio:auto;max-height:none}
+ .workflow-playing .workflow-film-shell{animation:none;transform:none;height:100%;box-shadow:inset 0 1px #fff3,0 20px 70px #0009}
+ .workflow-playing .workflow-film-note{display:none}
+ .workflow-playing .workflow-film-image{aspect-ratio:auto;min-height:240px}
+ .workflow-playing .workflow-film-image video{display:block;height:100%;width:100%;object-fit:contain;background:#050309}
+}
+@media(max-width:760px){
+ .workflow-desktop-player,.workflow-close-player{display:none}
+ .workflow-mobile-poster{display:block;position:absolute;inset:0}
+ .workflow-mobile-poster img{object-fit:contain!important}
+ .workflow-mobile-poster .workflow-watch{font-size:6px;padding:6px 7px;gap:4px}
+ .workflow-mobile-poster .workflow-watch svg{width:11px;height:11px}
+}
+@media(prefers-reduced-motion:reduce){.workflow-composition{transition:none}}
+/* The same portrait lifts into the browser's top layer without reflowing the graph. */
+.reel-cinema{position:fixed;inset:0;margin:auto;width:min(480px,85vw);height:min(850px,88dvh);max-width:none;max-height:none;padding:10px;border:1px solid #d1a6f2aa;border-radius:22px;background:linear-gradient(145deg,#382244,#100918 60%);color:#f0e5fc;box-shadow:0 40px 120px #000b,inset 0 1px #f2dcff55;transform-origin:top left;overflow:hidden}
+.reel-cinema[open]{display:flex;flex-direction:column;gap:8px}.reel-cinema::backdrop{background:#05020bbd;backdrop-filter:blur(7px);animation:reel-dim .5s ease both}.reel-cinema header{display:flex;justify-content:space-between;align-items:center;padding:0 8px;font-size:10px;letter-spacing:.1em}.reel-cinema header button{display:grid;place-items:center;width:36px;height:36px;color:#f0e5fc;border:1px solid #b78bd84d;border-radius:50%;background:#291a38;cursor:pointer}.reel-cinema video{display:block;width:100%;flex:1;min-height:0;object-fit:contain;background:#030205;border-radius:12px}.reel-cinema footer{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 6px;font-size:9px;color:#bca8ce}.reel-cinema footer a{display:flex;align-items:center;gap:7px;color:#e9d2ff;font-size:11px}.reel-cinema header,.reel-cinema footer{flex-shrink:0}@keyframes reel-dim{from{background:#05020b00;backdrop-filter:blur(0)}to{background:#05020bbd;backdrop-filter:blur(7px)}}@media(prefers-reduced-motion:reduce){.reel-cinema::backdrop{animation:none}}
+.reel-cinema{will-change:transform;backface-visibility:hidden;isolation:isolate}.reel-cinema:after{content:'';position:absolute;inset:-50%;pointer-events:none;background:linear-gradient(110deg,transparent 40%,#e8ceff22 48%,#fff3 50%,transparent 57%);transform:translateX(100%);animation:reel-glass-sweep 1.15s ease-out;z-index:2}.reel-start-sound{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;padding:15px 20px;border-radius:12px;border:1px solid #d3abef;background:#291534ee;color:white;cursor:pointer;white-space:nowrap;z-index:3}@keyframes reel-glass-sweep{from{transform:translateX(-60%)}to{transform:translateX(100%)}}@media(prefers-reduced-motion:reduce){.reel-cinema:after{animation:none;display:none}}
+/* A bounded, compositor-driven particle shell unfolds around the video. */
+.reel-particle-shell{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;animation:reel-shell-away 1.55s both}
+.reel-particle-shell i{position:absolute;left:var(--px);top:var(--py);width:3px;height:3px;border-radius:50%;background:#e5c6ff;box-shadow:0 0 9px #b764ff;animation:reel-particle-release 1.35s cubic-bezier(.18,.7,.2,1) var(--delay) both}
+.reel-particle-shell>span{position:absolute;inset:20% 8%;border:1px solid #d7a6ff66;border-radius:50%;box-shadow:0 0 22px #b96aff22;animation:reel-orb-unfold 1.3s both}.reel-particle-shell>span:nth-last-child(2){rotate:60deg;animation-delay:.06s}.reel-particle-shell>span:last-child{rotate:-60deg;animation-delay:.12s}
+@keyframes reel-particle-release{0%{transform:translate(calc(var(--dx)*-.6),calc(var(--dy)*-.6)) scale(.2);opacity:0}20%{opacity:1}60%{opacity:.85}100%{transform:translate(var(--dx),var(--dy)) scale(.4);opacity:0}}
+@keyframes reel-orb-unfold{0%{transform:perspective(800px) rotateY(75deg) scale(.2);opacity:0}25%{opacity:1}100%{transform:perspective(800px) rotateY(-35deg) scale(1.8);opacity:0}}
+@keyframes reel-shell-away{0%,85%{visibility:visible}100%{visibility:hidden}}
+@media(max-width:760px){
+ .new-services .chapter-title{background:linear-gradient(90deg,#050309d9,#05030944);border-radius:12px;padding:12px;margin:-12px -6px 18px}
+ .universe-hud{padding-inline:12px}.universe-hud nav{gap:0}.universe-hud nav button{width:30px;height:44px}.universe-hud>button{min-height:44px;padding:5px 3px}
+ .renewed-contact{gap:18px;padding-bottom:22px}.renewed-contact .contact-copy{padding:0 4px}.renewed-contact .contact-copy h2{font-size:29px;margin-bottom:12px}.renewed-contact .contact-copy>p{font-size:11px;line-height:1.6;margin-bottom:12px}
+ .renewed-contact .contact-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.renewed-contact .contact-options>a{min-width:0;margin:0;padding-bottom:10px}.renewed-contact .contact-options strong{font-size:10px;line-height:1.5;overflow-wrap:anywhere}.renewed-contact .contact-call strong{padding-right:0}.renewed-contact .contact-options>a>svg{display:none}
+ .renewed-contact .enquiry-form{height:min(560px,calc(100svh - 175px));min-height:360px;padding:16px;border-radius:12px}.enquiry-step legend{font-size:17px;margin-bottom:14px}.enquiry-wizard .enquiry-fields{gap:11px}.enquiry-wizard .enquiry-heading{margin-bottom:10px;padding-bottom:10px}.enquiry-progress{margin-bottom:12px}.enquiry-choices label{padding:10px}.enquiry-actions{padding-top:12px;gap:8px}.enquiry-actions button{padding:10px 14px}.enquiry-note{font-size:9px!important}.enquiry-body{padding-right:4px}
+}
+@media(prefers-reduced-motion:reduce){.reel-particle-shell{display:none}}

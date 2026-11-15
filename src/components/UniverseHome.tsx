@@ -54,7 +54,7 @@ export default function UniverseHome(){
   scrollHeight.current=innerHeight;
   document.documentElement.style.setProperty('--journey-height',`${scrollHeight.current}px`);
   const measure=()=>{target=Math.min(6.6,Math.max(0,scrollY/(scrollHeight.current*1.35)))};
-  const resize=()=>{if(innerWidth!==width||innerWidth>760){width=innerWidth;scrollHeight.current=innerHeight;document.documentElement.style.setProperty('--journey-height',`${scrollHeight.current}px`);}measure();};measure();journey.current=target;
+  const resize=()=>{if(innerWidth!==width||innerWidth>760){const position=target;width=innerWidth;scrollHeight.current=innerHeight;document.documentElement.style.setProperty('--journey-height',`${scrollHeight.current}px`);window.scrollTo({top:position*scrollHeight.current*1.35,behavior:'instant'});}measure();};measure();journey.current=target;
   const draw=(now:number)=>{raf=requestAnimationFrame(draw);if(document.hidden)return;const dt=Math.min(50,now-last);last=now;
    const transfer=navigation.current;let transferExit=0;
    if(transfer){const elapsed=now-transfer.started;

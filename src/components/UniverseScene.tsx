@@ -21,7 +21,11 @@ vec3 form(float state,vec2 uv){
   return vec3(sin(phi)*cos(a)*r,cos(phi)*r,sin(phi)*sin(a)*r);
  }
  if(state<2.5){
-  float y=(v-.5)*10.;float r=.18+1.13*pow(abs(sin(y*.83+time*.13)),1.5)+ripple*.5;
+  // Compensate for the phone scene's global .6 scale: the helix must
+  // span the viewport vertically rather than shrinking into its centre.
+  float y=(v-.5)*mix(10.,18.,mobile);
+  float coil=(v-.5)*10.;
+  float r=(.18+1.13*pow(abs(sin(coil*.83+time*.13)),1.5)+ripple*.5)*mix(1.,clamp(viewAspect*4.1,1.45,2.2),mobile);
   a+=y*.65+time*.08;
   return vec3(cos(a)*r,y,sin(a)*r);
  }
